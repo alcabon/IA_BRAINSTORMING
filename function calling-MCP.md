@@ -1123,3 +1123,89 @@ Les deux ont gagné leur bataille respective — mais sur des terrains complète
 | **Analogie** | Microsoft avec l'API Win32 | W3C avec HTML |
 
 > Au fond, OpenAI a pensé en **éditeur de produit**, Anthropic a pensé en **architecte d'infrastructure**. Les deux approches sont légitimes — et probablement complémentaires sur le long terme.
+
+---
+
+## Oui — et l'évolution est déjà en cours, structurée en couches
+
+Les standards actuels (function calling + MCP) résolvent **un seul problème** : comment un LLM parle à des outils. La prochaine vague adresse un problème différent : **comment des agents parlent à d'autres agents**.
+
+---
+
+### Ce qui a déjà changé sur MCP lui-même
+
+Fait important et récent : en décembre 2025, Anthropic a cédé le standard MCP à l'Agentic AI Foundation, une nouvelle entité gérée par la Fondation Linux, dont les membres fondateurs incluent OpenAI, Google, AWS, Bloomberg et Cloudflare.
+
+MCP n'est plus propriétaire Anthropic — c'est désormais un bien commun de l'industrie. Et la spécification de novembre 2025 représente un tournant majeur : elle étend MCP au-delà des appels d'outils synchrones vers une architecture capable de supporter des workflows longs, sécurisés et gouvernés en environnement de production réel.
+
+---
+
+### La nouvelle couche qui émerge : agent ↔ agent
+
+La phase actuelle 2024-2025 met l'accent sur des protocoles légers et standardisés comme MCP, ACP, ANP et A2A, qui adressent les limitations précédentes en permettant la découverte dynamique, la communication sécurisée et la collaboration décentralisée entre systèmes d'agents hétérogènes.
+
+---
+
+### Les 4 protocoles émergents
+
+**A2A — Google (avril 2025)**
+
+Là où function calling et MCP se concentrent sur l'interaction modèle-outil, A2A tackle un défi différent : comment faire collaborer efficacement plusieurs agents spécialisés.
+
+A2A permet aux agents de s'annoncer via une "Agent Card" en JSON, de gérer des tâches à cycle de vie long, et de négocier le format des échanges — texte, image, audio, vidéo. Lancé avec le support de Salesforce, SAP, ServiceNow, LangChain, MongoDB.
+
+**ACP — IBM BeeAI**
+
+ACP se positionne comme l'étape suivante après MCP : là où MCP gère l'accès aux outils et données, ACP définit comment les agents opèrent et communiquent entre eux. Il utilise REST/HTTP standard — pas de SDK requis — et est async-first.
+
+**ANP — Agent Network Protocol**
+
+Initiative communautaire pour la communication décentralisée entre agents sur des réseaux distribués — pensé pour des écosystèmes sans autorité centrale.
+
+**AG-UI — Agent User Interaction Protocol**
+
+Protocole émergent pour standardiser comment les agents communiquent avec les interfaces utilisateur — streaming de tokens, formulaires dynamiques, négociation de modalités.
+
+---
+
+### La hiérarchie des couches qui se dessine
+
+```
+Niveau 1 — Modèle ↔ Outil
+  Function Calling     →  précision maximale, propriétaire
+  MCP                  →  standardisé, écosystème
+
+Niveau 2 — Agent ↔ Agent
+  A2A (Google)         →  collaboration inter-agents
+  ACP (IBM)            →  communication async, REST natif
+  ANP                  →  réseau décentralisé d'agents
+
+Niveau 3 — Agent ↔ Humain
+  AG-UI                →  streaming, UI dynamique, modalités
+```
+
+Chaque niveau adresse un problème que le niveau inférieur ne peut pas résoudre.
+
+---
+
+### Le vrai chantier non résolu : la fragmentation
+
+La diversité des protocoles introduit des risques systémiques : l'absence de standard universel nécessite des intégrations sur-mesure souvent fragiles, empêche le développement de systèmes multi-agents scalables et complique les benchmarks comparatifs.
+
+C'est le paradoxe actuel — plus l'écosystème s'enrichit, plus la fragmentation augmente.
+
+---
+
+### Ce que ça signifie concrètement pour vous
+
+Pour votre cas Salesforce aujourd'hui :
+
+```
+Aujourd'hui    →  function calling direct         ✅ suffisant
+Demain         →  vos outils SF exposés en A2A    si vous orchestrez
+               →  plusieurs agents spécialisés    plusieurs agents SF
+               →  un agent synthèse, un agent     qui collaborent
+                  alertes, un agent reporting
+```
+
+> Les standards actuels sont suffisants pour 95% des cas en production aujourd'hui. La prochaine vague ne remplace pas function calling ou MCP — elle s'empile dessus pour adresser les **systèmes multi-agents**, qui sont le vrai défi de 2026.
