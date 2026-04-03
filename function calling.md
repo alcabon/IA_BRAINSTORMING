@@ -334,3 +334,98 @@ User prompt
 > Le LLM est **non-déterministe** — il peut toujours produire quelque chose d'inattendu. Le system prompt oriente, le schéma contraint, mais **seul votre backend garantit**.
 
 Ne déléguez jamais la sécurité au LLM seul, quelle que soit la qualité du prompt.
+
+---
+
+## D'abord, correction sur les chiffres : c'est bien plus que 100K
+
+Gemini 2.5 Flash dispose d'une fenêtre de contexte de **1 million de tokens** en entrée. Et Gemini 2.5 Pro atteint également 1 million de tokens, avec un taux de rappel de 100% jusqu'à 530 000 tokens et 99,7% jusqu'à 1 million.
+
+Donc la contrainte est bien moins serrée que vous ne le pensiez.
+
+---
+
+## Mais non — ce n'est pas la seule contrainte réelle
+
+Il y en a plusieurs autres qui comptent vraiment :
+
+### 1. Le coût par token (contrainte économique)
+
+Si vous avez une app où un utilisateur uploade 10 PDFs, une vidéo et des documents, historiquement vous deviez utiliser du RAG pour gérer ces requêtes et payer un montant significatif pour les tokens injectés dans la fenêtre de contexte.
+
+Concrètement pour votre cas Salesforce :
+
+```
+1 Case Salesforce textuel ≈ 200-500 tokens
+1000 Cases               ≈ 200K-500K tokens
+→ Coût à chaque requête  ← c'est là que ça pique
+```
+
+Et surtout : dans un contexte multi-tours, vous payez pour **tous les tokens accumulés** des tours précédents à chaque nouveau tour, pas seulement les nouveaux.
+
+---
+
+### 2. La taille de l'output (contrainte souvent oubliée)
+
+Les modèles Pro et 2.5 Pro imposent des caps d'output jusqu'à 64 000 tokens par réponse, tandis que les modèles Flash sont typiquement capés entre 8 000 et 32 000 tokens.
+
+```
+Input  : 1M tokens  ✅ pas de problème
+Output : 65K tokens ← la synthèse finale est contrainte ici
+```
+
+---
+
+### 3. La qualité d'attention sur les très gros volumes
+
+C'est la vraie limite technique — un LLM injecté avec 800K tokens de données va :
+
+```
+┌─────────────────────────────────────────┐
+│  Début du contexte  → attention forte   │
+│  Milieu             → attention faible  │ ← "lost in the middle"
+│  Fin du contexte    → attention forte   │
+└─────────────────────────────────────────┘
+```
+
+Même avec 99,7% de recall annoncé, sur des données métier denses, **le LLM peut rater des patterns non saillants** noyés dans la masse.
+
+---
+
+### 4. La latence (contrainte UX)
+
+```
+100K tokens injectés  → réponse en ~5-10s
+500K tokens injectés  → réponse en ~30-60s
+```
+
+Pour une synthèse interactive, ça devient problématique.
+
+---
+
+### La vraie question architecturale
+
+| Volume de données | Approche recommandée |
+|---|---|
+| < 50K tokens | **Tout injecter** — simple, efficace |
+| 50K - 300K tokens | **Injecter + filtrer** côté backend avant injection |
+| > 300K tokens | **RAG ou pré-agrégation** — le function calling récupère déjà des données résumées |
+
+Pour votre cas Salesforce, la bonne architecture est souvent **hybride** :
+
+```javascript
+// Au lieu de renvoyer 10 000 cases bruts au LLM :
+{
+  name: "query_salesforce",
+  // Le backend pré-agrège avant de renvoyer
+  // → retourne des stats, pas des enregistrements bruts
+  returns: {
+    total: 1247,
+    by_status: { Open: 823, Closed: 312, Pending: 112 },
+    by_priority: { High: 89, Medium: 445, Low: 713 },
+    top_issues: [ ... ] // 20 cases les plus représentatifs
+  }
+}
+```
+
+Le LLM reçoit alors **de l'information utile**, pas du volume brut — ce qui améliore à la fois la qualité, la vitesse et le coût.
