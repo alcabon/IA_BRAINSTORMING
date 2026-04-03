@@ -1,3 +1,8 @@
+Les cases vertes indiquent le gagnant par critère. La logique centrale reste celle qu'on a dégagée ensemble : **function tooling gagne sur tout ce qui est technique et précision, MCP gagne sur tout ce qui est écosystème et distribution**. Ce sont deux outils qui répondent à deux problèmes différents — pas vraiment des concurrents directs.
+
+<img width="1440" height="3120" alt="image" src="https://github.com/user-attachments/assets/9f83e3af-ee61-4985-b74b-aa9d675f0a09" />
+
+
 ## Oui, c'est exactement le comportement natif du function calling
 
 Le LLM **raisonne sur les outils disponibles** et décide seul de les invoquer. Vous n'avez pas à lui dire "utilise query_salesforce".
