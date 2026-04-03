@@ -429,3 +429,235 @@ Pour votre cas Salesforce, la bonne architecture est souvent **hybride** :
 ```
 
 Le LLM reçoit alors **de l'information utile**, pas du volume brut — ce qui améliore à la fois la qualité, la vitesse et le coût.
+
+---
+
+## La raison principale : le MCP résout un problème d'**écosystème**, pas de technique
+
+---
+
+### Le problème concret que MCP adresse
+
+Sans MCP, chaque intégration est **bilatérale** :
+
+```
+Claude    → fonction Salesforce    (vous codez)
+GPT       → fonction Salesforce    (vous recodez)
+Gemini    → fonction Salesforce    (vous recodez encore)
+Cursor    → fonction Salesforce    (vous recodez encore)
+```
+
+Avec MCP, Salesforce écrit **une fois** :
+
+```
+Salesforce MCP Server
+        ↑
+Claude ─┤
+GPT    ─┤  ← tous se connectent au même serveur
+Gemini ─┤
+Cursor ─┘
+```
+
+**C'est un protocole de standardisation**, exactement comme HTTP a standardisé le web. Salesforce n'a pas à connaître ou supporter chaque LLM — et inversement.
+
+---
+
+### Pourquoi Salesforce en particulier a adopté MCP
+
+Salesforce a des **milliers d'intégrateurs partenaires**. Sans MCP :
+
+- Chaque partenaire devait coder ses propres function callings
+- Schémas différents, comportements différents, maintenance explosive
+- Salesforce ne pouvait pas garantir la qualité ni la sécurité
+
+Avec un MCP Server officiel Salesforce :
+
+```
+Salesforce contrôle → le schéma
+                    → les permissions (OAuth intégré)
+                    → les rate limits
+                    → les mises à jour d'objets
+                    → la documentation exposée au LLM
+```
+
+C'est une **décision business et d'écosystème**, pas technique.
+
+---
+
+### Le paradoxe central
+
+```
+MCP          = function calling standardisé + protocole de découverte
+             = moins précis MAIS universellement connectable
+
+Function     = maximum de contrôle et précision
+calling      = mais vous portez tout le poids de l'intégration
+```
+
+MCP a gagné la bataille de la **visibilité** parce que :
+
+| Raison | Explication |
+|---|---|
+| **Anthropic l'a promu** | Créateur du protocole, donc marketing fort |
+| **Cursor / Claude Desktop l'ont adopté** | Les outils dev grand public l'ont rendu viral |
+| **"Plug and play"** | Un dev peut brancher un MCP server en 5 minutes |
+| **Vendeurs SaaS y voient un marché** | Salesforce, Linear, Notion publient leurs serveurs |
+| **Presse tech** | "MCP est le USB-C de l'IA" — ça fait des titres |
+
+---
+
+### Ce que la presse ne dit pas
+
+Le function calling direct **reste dominant en production réelle** — il est juste invisible car :
+
+- Il vit dans du code backend propriétaire
+- Les entreprises ne communiquent pas sur leur architecture interne
+- Il n'y a pas d'écosystème à marketer
+
+```
+Ce qu'on voit    → MCP (open source, annonces, conférences)
+Ce qui tourne    → function calling (dans 90% des agents en prod)
+```
+
+---
+
+### En résumé
+
+> MCP est populaire parce qu'il **résout un problème de distribution et d'écosystème** que le function calling ne peut pas résoudre seul — pas parce qu'il est techniquement supérieur.
+
+Pour un éditeur comme Salesforce, publier un MCP server c'est comme publier une API REST : vous exposez votre produit à tout un écosystème sans dépendre de chaque intégrateur individuel. **C'est une stratégie de plateforme**, pas un choix d'architecture IA.
+
+---
+
+## Bonne question — il faut clarifier ce qui se passe où
+
+Le function calling implique **deux couches distinctes** qu'il ne faut pas confondre.
+
+---
+
+### Ce que le LLM voit : la déclaration JSON
+
+Le LLM ne connaît **jamais** Apex. Il ne voit qu'un schéma JSON :
+
+```json
+{
+  "name": "query_salesforce",
+  "description": "Interroge les données Salesforce",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "object_type": { "type": "string" },
+      "filters": { "type": "object" }
+    }
+  }
+}
+```
+
+C'est **tout ce que le LLM connaît** — un contrat JSON, langage-agnostique.
+
+---
+
+### Ce que votre backend fait : l'implémentation réelle
+
+```
+LLM → tool_use { name: "query_salesforce", input: {...} }
+                        │
+                        ▼
+            [Votre backend : Node / Python / Java]
+                        │
+            traduit en appel Salesforce
+                        │
+               ┌────────┴────────┐
+               ▼                 ▼
+         REST API SF        Apex REST
+         (SOQL direct)      (endpoint custom)
+```
+
+L'implémentation peut être **n'importe quel langage** côté backend — Apex n'intervient que si vous exposez un endpoint Apex REST sur Salesforce.
+
+---
+
+### Les 3 patterns d'implémentation avec Salesforce
+
+**Pattern 1 — REST API Salesforce standard (le plus simple)**
+```javascript
+// Votre backend Node.js exécute directement
+async function query_salesforce({ object_type, filters }) {
+  const soql = buildSOQL(object_type, filters);
+  const response = await fetch(
+    `${SF_INSTANCE}/services/data/v59.0/query?q=${soql}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.json();
+}
+// Zéro Apex — vous utilisez l'API REST native Salesforce
+```
+
+**Pattern 2 — Apex REST (logique métier complexe)**
+```apex
+// Dans Salesforce, vous exposez un endpoint Apex
+@RestResource(urlMapping='/llm-tools/cases/*')
+global class LLMCaseService {
+  
+  @HttpPost
+  global static Map<String, Object> getCases(
+    String filters,
+    List<String> fields
+  ) {
+    // Logique métier Apex ici
+    // Calculs complexes, règles métier, accès multi-objets
+    List<Case> cases = Database.query(buildQuery(filters, fields));
+    return formatForLLM(cases);
+  }
+}
+```
+
+```javascript
+// Votre backend appelle cet endpoint Apex
+async function query_salesforce(input) {
+  return await fetch(`${SF_INSTANCE}/services/apexrest/llm-tools/cases`, {
+    method: 'POST',
+    body: JSON.stringify(input)
+  });
+}
+```
+
+**Pattern 3 — Agentforce (MCP natif Salesforce)**
+```
+Salesforce gère tout en interne
+Apex Actions exposées comme tools directement
+→ Vous ne codez plus le backend intermédiaire
+```
+
+---
+
+### L'interface que vous devez respecter
+
+La seule contrainte réelle c'est **côté déclaration JSON** — que votre fonction retourne quelque chose de parsable :
+
+```javascript
+// Contrat implicite de toute fonction tool
+async function monTool(input) {        // input = ce que le LLM a envoyé
+  // ... votre logique (Apex, REST, SQL, peu importe)
+  return {                             // return = ce que le LLM recevra
+    success: true,
+    data: [...],
+    metadata: { count: 42 }
+  };
+}
+```
+
+---
+
+### En résumé
+
+```
+Déclaration JSON    → pour le LLM         (langage agnostique)
+Backend intermédiaire → Node/Python/Java  (orchestre les appels)
+Apex REST           → optionnel           (si logique métier SF complexe)
+REST API SF native  → souvent suffisant   (SOQL direct sans Apex)
+```
+
+> Apex n'est utile que si vous avez de la **logique métier Salesforce complexe** à encapsuler. Pour des requêtes SOQL simples, l'API REST Salesforce standard suffit largement — pas besoin de toucher à Apex.
+
+----
