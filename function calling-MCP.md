@@ -1071,3 +1071,55 @@ La **logique métier et les schémas** ne changent pas — seule l'enveloppe syn
 ### En une phrase
 
 > Commencez par le function calling direct, traitez les descriptions comme du **code de production** à itérer et versionner, et ne migrez vers MCP que le jour où votre problème devient un problème d'**écosystème** — pas avant.
+
+---
+
+## Oui — et c'est parfaitement cohérent avec leurs ADN respectifs
+
+---
+
+### OpenAI : l'innovateur produit tourné développeur
+
+OpenAI a introduit le function calling en **juin 2023** avec une philosophie claire :
+
+> "Comment rendre les LLMs utiles dans des systèmes réels ?"
+
+Leur force a toujours été de **ship vite** des primitives bas niveau que les développeurs adoptent immédiatement. Le function calling est typiquement ça — une interface technique brute, précise, sans protocole autour. Ils ont capturé l'écosystème dev avant tout le monde, ce qui en a fait le standard de facto.
+
+---
+
+### Anthropic : l'innovateur protocole tourné écosystème
+
+Anthropic a sorti MCP en **novembre 2024** — soit 18 mois après. Pas par retard, mais parce que leur observation était différente :
+
+> "Le function calling résout le problème d'un développeur. MCP résout le problème de l'industrie."
+
+C'est cohérent avec leur positionnement — Anthropic pense plus long terme, plus systémique. Créer un protocole ouvert plutôt qu'une feature propriétaire, c'est un choix délibéré de **ne pas garder l'avantage pour soi**.
+
+---
+
+### Le paradoxe intéressant
+
+```
+OpenAI  →  invente la primitive technique (function calling)
+            garde la spec propriétaire
+            devient standard de facto par adoption massive
+
+Anthropic → invente le protocole ouvert (MCP)
+             publie la spec librement
+             devient standard par conviction écosystème
+```
+
+Les deux ont gagné leur bataille respective — mais sur des terrains complètement différents. OpenAI a gagné le terrain **technique et immédiat**, Anthropic tente de gagner le terrain **structurel et long terme**.
+
+---
+
+### Ce que ça révèle sur leurs stratégies profondes
+
+| | OpenAI | Anthropic |
+|---|---|---|
+| **Philosophie** | Move fast, capture developers | Build foundations, shape the industry |
+| **Modèle** | Feature propriétaire → adoption | Standard ouvert → influence |
+| **Analogie** | Microsoft avec l'API Win32 | W3C avec HTML |
+
+> Au fond, OpenAI a pensé en **éditeur de produit**, Anthropic a pensé en **architecte d'infrastructure**. Les deux approches sont légitimes — et probablement complémentaires sur le long terme.
