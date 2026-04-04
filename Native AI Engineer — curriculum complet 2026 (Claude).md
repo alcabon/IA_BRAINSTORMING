@@ -55,8 +55,6 @@ Voulez-vous que je construise ce curriculum "Gemini API Engineer" basé sur la d
 
 Voici ce qui distingue structurellement ce curriculum de tout ce qui existe par ailleurs.
 
-<img width="1440" height="2316" alt="image" src="https://github.com/user-attachments/assets/6da0f1a1-b50e-45d6-803c-2b8364a86b3f" />
-
 
 **Architecture en 5 phases non-négociables :**
 
