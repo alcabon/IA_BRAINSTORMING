@@ -73,3 +73,7 @@ Kubeflow, TFX, BigQuery ML, les pipelines MLOps classiques — pas parce qu'ils 
 **Les 3 projets portfolio qui font la différence** à l'entretien : le wrapper provider-agnostic (semaine 1), le MCP server "finance-tools" interopérable Claude/Gemini (semaine 5), et le système multi-agents complet avec monitoring (semaine 12).
 
 Chaque source est cliquable et pointe directement vers la doc officielle du provider concerné. Voulez-vous qu'on commence par approfondir une phase spécifique, ou démarrer directement avec la semaine 4 sur le function calling puisque vous avez déjà la doc officielle Gemini ouverte ?
+
+---
+
+
